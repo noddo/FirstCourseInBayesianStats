@@ -33,10 +33,11 @@ s3 <- read.delim(w3, header = FALSE, sep="\n")
 
 ```
 
-Build functions to sample from posterior distributions for $\theta$ (mean), and post.predictive distributions.
+Build function to sample from posterior distributions for $\theta$ (mean). `norm.norm.post.theta`
 
-```{r}
-#function to sample from posterior dist. of theta
+```{r echo = FALSE}
+
+#function to sample from posterior dist. of theta- Peter Hoff parameterization
 norm.norm.post.theta <- function(x, k0 ,mu0 ,v0 ,sigma0, num.samples = 1000 ){
   n = length(x)
   xbar = mean(x)
@@ -59,13 +60,6 @@ norm.norm.post.theta <- function(x, k0 ,mu0 ,v0 ,sigma0, num.samples = 1000 ){
 return(mu)
 }
 
-#function to sample from posterior predictive dist.
-norm.norm.post.pred <- function(x, k0 ,mu0 ,v0 ,sigma0, num.samples = 1000){
-  n = length(x)
-  xbar = mean(x)
-  s2 = var(x)
-}
-    
 ```
 
 a. posterior means and 95% confidence intervals for the mean $\theta$ and standard deviation $\sigma$ from each school;
@@ -76,6 +70,7 @@ num.samples = 10e4
 thetaS1 = norm.norm.post.theta(s1$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
 thetaS2 = norm.norm.post.theta(s2$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
 thetaS3 = norm.norm.post.theta(s3$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+
 cat(
   paste("school 1 theta mean: "
         , round(mean(thetaS1),3),"; 95% confidence interval: ["
@@ -115,11 +110,52 @@ p
 
 c. the posterior probability that $\tilde{Y_i} < \tilde{Y_j} <\tilde{Y_k}$ for all six permutations {i, j, k} of {1, 2, 3}, where Y ̃i is a sample from the posterior predictive distribution of school i.
 
-```{r}
+```{r echo = FALSE}
+#function to sample from posterior predictive dist.
+norm.norm.post.pred <- function(x, k0 ,mu0 ,v0 ,sigma0, num.samples = 1000 ){
+# posterior predictive distribution:
 
+  # sampling dist ~ N(mu, sigma)
+  # posterior dist for sigma ~ 1/gamma(vn, sigma_n)
+  # posterior dist for mu ~ N( mun, sigma_n/kn)
+  
+# N(mu,sigma) + N(mun, sigma_n/kn)
+
+  # y_new ~ N (mu, sigma + sigma_n/kn)
+
+  n = length(x)
+  xbar = mean(x)
+  s2 = var(x)
+  
+
+#posterior parameters
+#mu|data:
+  kn = k0 + n
+  mun = (k0*mu0 + n*xbar)/kn
+
+# sigma|data:
+    vn = v0 + n
+    sigma_n = 1/vn * (v0*sigma0 + (n-1)*s2 + (xbar - mu0)^2*k0*n/kn)
+
+#Sample posterior distributions
+  sigma = 1/rgamma(num.samples, vn/2, sigma_n*vn/2)
+  mu = rnorm(num.samples, mun, sqrt(sigma_n/kn))
+
+ post_predictive = rnorm( num.samples, mu, sqrt(sigma + sigma_n/kn) ) 
+  
+return(post_predictive)
+}
 
 ```
 
+```{r}
+num.samples = 10e4
 
+thetaS1 = norm.norm.post.pred(s1$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+thetaS2 = norm.norm.post.pred(s2$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+thetaS3 = norm.norm.post.pred(s3$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+
+
+```
 
 
