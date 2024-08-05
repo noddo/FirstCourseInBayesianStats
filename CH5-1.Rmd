@@ -1,0 +1,125 @@
+---
+title: "CH 5"
+author: "Nick Oddo"
+date: "2024-07-28"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### 5.1
+Studying: The files school1.dat, school2.dat and school3.dat contain data on the amount of time students from three high schools spent on studying or homework during an exam period. Analyze data from each of these schools separately, using the normal model with a conjugate prior distribution, in which {$\mu_0 = 5, \sigma_0^2 = 4, \kappa_0 = 1, \nu_0 = 2$} and compute or approximate the following:
+
+a. posterior means and 95% confidence intervals for the mean $\theta$ and standard deviation $\sigma$ from each school;
+
+b. the posterior probability that $\theta_i < \theta_j < \theta_k$ for all six permutations {i,j,k} of {1,2,3};
+
+c. the posterior probability that $\tilde{Y_i} < \tilde{Y_j} <\tilde{Y_k}$ for all six permutations {i, j, k} of {1, 2, 3}, where Y ̃i is a sample from the posterior predictive distribution of school i.
+
+d. Compute the posterior probability that $\theta_1$ is bigger than both $\theta_2$ and $\theta_3$, and the posterior probability that $Y_1$ is bigger than both $Y_2$ and $Y_3$.
+
+
+```{r, echo = FALSE}
+w1 = "http://www2.stat.duke.edu/~pdh10/FCBS/Exercises/school1.dat"
+w2 = "http://www2.stat.duke.edu/~pdh10/FCBS/Exercises/school2.dat"
+w3 = "http://www2.stat.duke.edu/~pdh10/FCBS/Exercises/school3.dat"
+
+s1 <- read.delim(w1, header = FALSE, sep="\n") 
+s2 <- read.delim(w2, header = FALSE, sep="\n") 
+s3 <- read.delim(w3, header = FALSE, sep="\n") 
+
+```
+
+Build functions to sample from posterior distributions for $\theta$ (mean), and post.predictive distributions.
+
+```{r}
+#function to sample from posterior dist. of theta
+norm.norm.post.theta <- function(x, k0 ,mu0 ,v0 ,sigma0, num.samples = 1000 ){
+  n = length(x)
+  xbar = mean(x)
+  s2 = var(x)
+  
+
+#posterior parameters
+#mu|data:
+  kn = k0 + n
+  mun = (k0*mu0 + n*xbar)/kn
+
+# sigma|data:
+    vn = v0 + n
+    sigma_n = 1/vn * (v0*sigma0 + (n-1)*s2 + (xbar - mu0)^2*k0*n/kn)
+
+#Sample posterior distributions
+  sigma = 1/rgamma(num.samples, vn/2, sigma_n*vn/2)
+  mu = rnorm(num.samples, mun, sqrt(sigma_n/kn))
+
+return(mu)
+}
+
+#function to sample from posterior predictive dist.
+norm.norm.post.pred <- function(x, k0 ,mu0 ,v0 ,sigma0, num.samples = 1000){
+  n = length(x)
+  xbar = mean(x)
+  s2 = var(x)
+}
+    
+```
+
+a. posterior means and 95% confidence intervals for the mean $\theta$ and standard deviation $\sigma$ from each school;
+
+```{r}
+num.samples = 10e4
+
+thetaS1 = norm.norm.post.theta(s1$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+thetaS2 = norm.norm.post.theta(s2$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+thetaS3 = norm.norm.post.theta(s3$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+cat(
+  paste("school 1 theta mean: "
+        , round(mean(thetaS1),3),"; 95% confidence interval: ["
+        , round(quantile(thetaS1, .025),3),","
+        , round(quantile(thetaS1, .975),3),"]"
+        ),
+  
+  paste("school 2 theta mean: "
+        , round(mean(thetaS2),3),"; 95% confidence interval: ["
+        , round(quantile(thetaS2, .025),3),","
+        , round(quantile(thetaS2, .975),3),"]"
+        ),
+  
+  paste("school 3 theta mean: "
+        , round(mean(thetaS3),3),"; 95% confidence interval: ["
+        , round(quantile(thetaS3, .025),3),","
+        , round(quantile(thetaS3, .975),3),"]"
+        )
+,sep = '\n')
+```
+
+b. the posterior probability that $\theta_i < \theta_j < \theta_k$ for all six permutations {i,j,k} of {1,2,3};
+
+```{r}
+library(gtools)
+# create data frame that lists permutations.
+x = c("thetaS1", "thetaS2", "thetaS3")
+p = data.frame(permutations(n = 3, r = 3, v = x), "Prob" = 0.0); colnames(p)<-c("theta_i","theta_j","theta_k","P(theta_i < theta_j < theta_k)")
+ 
+#Calculate probability that theta_i<theta_j<theta_k via monte carlo simulation
+for (i in 1:nrow(p) ){
+  p[i,4] =   mean( ifelse(get(p[i,1]) < get(p[i,2]) & get(p[i,2])< get(p[i,3]), 1.0,0.0) )
+}
+
+p
+```
+
+c. the posterior probability that $\tilde{Y_i} < \tilde{Y_j} <\tilde{Y_k}$ for all six permutations {i, j, k} of {1, 2, 3}, where Y ̃i is a sample from the posterior predictive distribution of school i.
+
+```{r}
+
+
+```
+
+
+
+
