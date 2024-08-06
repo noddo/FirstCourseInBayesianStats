@@ -108,7 +108,7 @@ for (i in 1:nrow(p) ){
 p
 ```
 
-c. the posterior probability that $\tilde{Y_i} < \tilde{Y_j} <\tilde{Y_k}$ for all six permutations {i, j, k} of {1, 2, 3}, where Y ̃i is a sample from the posterior predictive distribution of school i.
+c. the posterior probability that $\tilde{Y_i} < \tilde{Y_j} <\tilde{Y_k}$ for all six permutations {i, j, k} of {1, 2, 3}, $\tilde{Y_i}$ is a sample from the posterior predictive distribution of school i.
 
 ```{r echo = FALSE}
 #function to sample from posterior predictive dist.
@@ -147,15 +147,55 @@ return(post_predictive)
 }
 
 ```
+create funcrion `norm.norm.post.pred` to sample from posterior distribution $\tilde{Y_i}|\mu, \sigma^2$
 
 ```{r}
 num.samples = 10e4
 
-thetaS1 = norm.norm.post.pred(s1$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
-thetaS2 = norm.norm.post.pred(s2$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
-thetaS3 = norm.norm.post.pred(s3$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+YtildeS1 = norm.norm.post.pred(s1$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+YtildeS2 = norm.norm.post.pred(s2$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
+YtildeS3 = norm.norm.post.pred(s3$V1, mu0 = 5, sigma0 = 4 , k0 = 1, v0 = 2, num.samples = num.samples)
 
+
+# create data frame that lists permutations.
+x = c("YtildeS1", "YtildeS2", "YtildeS3")
+s = data.frame(permutations(n = 3, r = 3, v = x), "Prob" = 0.0); colnames(s)<-c("school_i","school_j","school_k","P(YTilde_i < YTilde_j < YTilde_k)")
+ 
+#Calculate probability that YTilde_i < YTilde_j < YTilde_k via monte carlo simulation
+for (i in 1:nrow(s) ){
+  s[i,4] =   mean( ifelse(get(s[i,1]) < get(s[i,2]) & get(s[i,2])< get(s[i,3]), 1.0,0.0) )
+}
+
+s
 
 ```
+d. Compute the posterior probability that $\theta_1$ is bigger than both $\theta_2$ and $\theta_3$, and the posterior probability that $Y_1$ is bigger than both $Y_2$ and $Y_3$.
+
+```{r}
+
+m1 = mean( ifelse( thetaS1 > thetaS2 & thetaS1 > thetaS2, 1.0, 0.0 ) )
+y1 = mean( ifelse( YtildeS1 > YtildeS2 & YtildeS1 > YtildeS3, 1.0, 0.0 ) )
+
+cat(
+  paste( 'P(thetaS1 > thetaS2 and thetaS2) = ',m1 ), 
+  paste( 'P(YTildeS1 > YTildeS2 and YTildeS2) = ',y1 ) 
+,sep = '\n')
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
