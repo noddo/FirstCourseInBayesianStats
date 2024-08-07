@@ -57,6 +57,7 @@ return(mu)
 
 sample data using $\theta_0 = 75, \sigma_0^2 = 100$ and a variety of different prior $\sigma^2_0$ specifications.
 
+
 ```{r}
 
 sigma.params = c(1,2,4,8,16,32)
@@ -72,7 +73,7 @@ for (i in 1:length(sigma.params)){
   post.samples.A = norm.norm.post.theta(x =75.2,s2 = (7.3)^2, mu0 = 75 , sigma0 = 100, k0 = k0, v0 = v0)
   post.samples.B = norm.norm.post.theta(x =77.5,s2 = (8.1)^2, mu0 = 75 , sigma0 = 100, k0 = k0, v0 = v0)
 
-  p[i,2] = mean( ifelse(post.samples.A < post.samples.B, 1.0, 0.0) )
+  p[i,2] = mean( ifelse(post.samples.A < post.samples.B, 1.0, 0.0) ) 
   
 }
 
