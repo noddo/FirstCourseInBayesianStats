@@ -1,8 +1,8 @@
 ---
-title: "CH 5"
+title: "A First Course In Bayesian Statistical Methods: CH5"
 author: "Nick Oddo"
 date: "2024-07-28"
-output: html_notebook
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-### 5.1
+# Problem 5.1
 Studying: The files school1.dat, school2.dat and school3.dat contain data on the amount of time students from three high schools spent on studying or homework during an exam period. Analyze data from each of these schools separately, using the normal model with a conjugate prior distribution, in which {$\mu_0 = 5, \sigma_0^2 = 4, \kappa_0 = 1, \nu_0 = 2$} and compute or approximate the following:
 
 a. posterior means and 95% confidence intervals for the mean $\theta$ and standard deviation $\sigma$ from each school;
@@ -182,6 +182,96 @@ cat(
 ,sep = '\n')
 
 ```
+
+
+# Problem 5.2
+Sensitivity analysis: Thirty-two students in a science classroom were
+randomly assigned to one of two study methods, A and B, so that
+$n_A$ = $n_B$ = 16 students were assigned to each method. After several
+weeks of study, students were examined on the course material with an
+exam designed to give an average score of 75 with a standard deviation of
+10. The scores for the two groups are summarized by ${\bar{y}_A = 75.2, S_A = 7.3}$
+and ${\bar{y}_B = 77.5, S_B = 8.1}$. Consider independent, conjugate normal prior
+distributions for each of $\theta_A$ and $\theta_B$, with $\mu_0 = 75$ and $\sigma_0^2 = 100$ for
+both groups. For each $(\kappa_0, \nu_0) \in {(1,1),(2,2),(4,4),(8,8),(16,16),(32,32)}$
+(or more values), obtain $Pr(\theta_A < \theta_B|\mathbf{y}_A, \mathbf{y}_B)$ via Monte Carlo sampling.
+Plot this probability as a function of $(\kappa_0 = \nu_0)$. Describe how you might
+use this plot to convey the evidence that $\theta_A < \theta_B$ to people of a variety
+of prior opinions.
+
+Build function to sample from posterior distributions for $\theta$ (mean). `norm.norm.post.theta`
+```{r echo = FALSE}
+
+#function to sample from posterior dist. of theta- Peter Hoff parameterization
+norm.norm.post.theta <- function(x, k0 ,mu0 ,v0 ,sigma0,xbar = NULL,n = NULL ,s2 = NULL, num.samples = 1000 ){
+  
+  if(is.null(xbar)){
+  xbar = mean(x)
+  }
+  
+  if(is.null(n)){
+  n = length(x)
+  }
+  
+  if(is.null(s2)){
+    s2 = var(x)
+  }
+
+#posterior parameters
+#mu|data:
+  kn = k0 + n
+  mun = (k0*mu0 + n*xbar)/kn
+
+# sigma|data:
+    vn = v0 + n
+    sigma_n = 1/vn * (v0*sigma0 + (n-1)*s2 + (xbar - mu0)^2*k0*n/kn)
+
+#Sample posterior distributions
+  sigma = 1/rgamma(num.samples, vn/2, sigma_n*vn/2)
+  mu = rnorm(num.samples, mun, sqrt(sigma/kn))
+
+  post.samples.list = list( "mu" = mu, "sigma" = sigma)
+  
+return(post.samples.list)
+}
+
+```
+
+sample data using $\theta_0 = 75, \sigma_0^2 = 100$ and a variety of different prior $\sigma^2_0$ specifications.
+
+
+```{r}
+
+sigma.params = c(1,2,4,8,16,32)
+
+p = data.frame('(k0,v0)'= 0, 'P(thetaA < thetaB)' = 0); colnames(p) = c('(k0,v0)','P(thetaA < thetaB)')
+
+
+for (i in 1:length(sigma.params)){
+  k0 <- v0 <- sigma.params[i]
+  
+  p[i,1] = paste('(',k0,',',v0,')',sep = '') 
+
+  post.samples.A = norm.norm.post.theta(xbar =75.2, n = 16 ,s2 = (7.3)^2, mu0 = 75 , sigma0 = 100, k0 = k0, v0 = v0)
+  post.samples.B = norm.norm.post.theta(xbar =77.5, n = 16 ,s2 = (8.1)^2, mu0 = 75 , sigma0 = 100, k0 = k0, v0 = v0)
+
+  p[i,2] = mean( post.samples.A$mu < post.samples.B$mu ) 
+  
+}
+
+p
+
+#plot points
+plot(
+    x=sigma.params,
+    y=p$`P(thetaA < thetaB)`,
+    type = 'b',
+    xlab = 'v0 = k0 = x',
+    ylab = "P(thetaA < thetaB)"
+    )
+
+```
+The prior parameters $(\kappa_0, \nu_0 )$ indicate prior sample size and variance respectively. The higher $\kappa_0$, the more weight will be given to the prior information into the posterior distribution of $\sigma$ (or $\tau=\frac{1}{\sigma}$). The higher $\nu_0$ is the more variation is present in the prior (in other words, the flatter the prior will be). In the case where $\nu_0 = \kappa_0 = i$, the higher $i$, not only will the posterior be more dependent on the prior, but also, the posterior will reflect more variation (also get flatter). The takaway here, however is that regardless of prior selected, it's highly likely that $\theta_A < \theta_B$ since $P(\theta_A < \theta_B) > .5$ for all selected values of $(\kappa_0, \nu_0 )$.
 
 
 
