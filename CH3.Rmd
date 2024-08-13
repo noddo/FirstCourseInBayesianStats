@@ -36,7 +36,6 @@ as for $P(\sum Y_i = y|\theta)$, let $Z = \sum Y_i $. Then:
 \end{align}
 
 
-
 b. For the moment, suppose you believed that $\theta \in {0.0, 0.1,\ldots , 0.9, 1.0}$.
 Given that the results of the survey were $\sum_{i=1}^{100} = 57$ compute $P(\sum Yi = 57|\theta)$ for each of these 11 values of $\theta$ and plot these probabilities as a function of $\theta$.
 
@@ -60,46 +59,38 @@ function of $\theta$.
 Using a discrete uniform prior $p(\theta) = \frac{1}{11}$, and using $Y = \sum_{i=1}^{100} Y_i$:
 
 \begin{align}
-
-P(\theta \| Y = 57) \\
-&= \frac{ P(Y = 57 \| \theta)P(\theta)}{\sum_{j=1}^{11} P(Y = 57\|\theta_j)P(\theta_j) }\\
-&=\frac{\binom{100}{57} \theta^57(1-\theta)^43 \cdot \frac{1}{11} }{ \sum_{j=1}^{11} \binom{100}{57}(\frac{1}{11})^57(\frac{10}{11})^43 \cdot (\frac{1}{11})\\
-
+&P(\theta | Y = 57) \\
+&= \frac{ P(Y = 57 | \theta)P(\theta)}{\sum_{j=1}^{11} P(Y = 57 |\theta_j)P(\theta_j) }\\
+&=\frac{\binom{100}{57} \theta^{57}(1-\theta)^{43} \cdot \frac{1}{11} }{ \sum_{j=1}^{11} \binom{100}{57}(\frac{1}{11})^{57}(\frac{10}{11})^{43} \cdot (\frac{1}{11})}\\
 \end{align}
 
 ```{r}
 
-# post.probs = dbeta(theta,57+1,100-57+1)/sum(dbeta(theta,57+1,100-57+1))
-# 
-# post.probs
-# 
-# data.frame(theta,"Posterior Probs" = round(post.probs,4))
-# 
-# plot(theta,post.probs,type = 'b')
+thetas.c = seq(from = 0, to = 1, length.out = 11)
+my_post<-function(theta){ (dbinom(57,100,theta)*(1/11))/(sum(dbinom(57,100,theta))*(1/11)) }
 
-my_post<-function(theta){ 1/11*(theta/11)^57 * ((1-theta)*10/11)^43}
+data.frame(thetas.c,"probs" = round(my_post(thetas.c),4))
 
-plot(seq(0,1,length.out = 100),my_post(seq(0,1,length.out = 100)),type = 'l')
-
-
-# plot(seq(0,1,length.out = 100),pbeta(seq(0,1,length.out = 100),58,44),type = 'l')
+plot(thetas.c,my_post(thetas.c),type = 'b')
 
 ```
 
 
+d. Now suppose you allow $\theta$ to be any value in the interval $[0, 1]$. Using
+the uniform prior density for $\theta$, so that $p(\theta) = 1$, plot the posterior
+density $p(θ) P(\sum_{i=1}^{100} Y_i = 57|θ)$ as a function of $\theta$.
 
 
+```{r}
 
-d. Now suppose you allow θ to be any value in the interval [0, 1]. Using
-the uniform prior density for θ, so that p(θ) = 1, plot the posterior
-density p(θ) × Pr(Pn
-i=1 Yi = 57|θ) as a function of θ.
+thetas.d = seq(from = 0, to = 1, length.out = 1000)
+my_post<-function(theta){ (dbinom(57,100,theta)*(1/11))/(sum(dbinom(57,100,theta))*(1/11)) }
 
+# data.frame(thetas.d,"probs" = my_post(thetas.d))
 
+plot(thetas.d,my_post(thetas.d),type = 'l',xlab = 'theta', ylab = 'posterior prob')
 
-
-
-
+```
 
 e. As discussed in this chapter, the posterior distribution of θ is beta(1+
 57, 1 + 100−57). Plot the posterior density as a function of θ. Discuss
@@ -116,4 +107,18 @@ post.probs.e = dbeta(thetas.e,57+1,100-57+1)
 plot(thetas.e,post.probs.e,type = 'l')
 
 ```
+
+#3.2 
+Sensitivity analysis: It is sometimes useful to express the parameters $a$ and $b$ in a beta distribution in terms of $\theta_0 = \frac{a}{a+b}$ and $n_0 = a+b$, so that $a = \theta_0n_0$ and $b = (1 − \theta_0)n_0$. Reconsidering the sample survey data in Exercise 3.1, for each combination of $\theta_0 \in \{0.1, 0.2, \ldots, 0.9\}$ and $n_0 \in \{1, 2, 8, 16, 32\}$ find the corresponding $a$, $b$ values and compute $P(\theta >0.5| \sum_{i=1}^{100} Y_i = 57)$ using a beta(a, b) prior distribution for $\theta$. Display the results with a contour plot, and discuss how the plot could be used to explain to someone whether or not they should believe that $\theta > 0.5$, based on the data that $\sum_{i=1}^{100} Y_i = 57$.
+
+
+```{r}
+
+
+
+```
+
+
+
+
 
