@@ -9,22 +9,111 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## 3.1 
+Sample survey: Suppose we are going to sample 100 individuals from
+a county (of size much larger than 100) and ask each sampled person
+whether they support policy $Z$ or not. Let $Y_i = 1$ if person $i$ in the sample
+supports the policy, and $Y_i = 0$ otherwise.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+a. Assume $Y_1,\ldots, Y_{100}$ are, conditional on $\theta$, i.i.d. binary random variables with expectation $\theta$. 
+Write down the joint distribution of $Pr(Y_1 = y_1, . . . , Y_{100} = y_{100}|\theta)$ in a compact form.
+Also write down the form of $P(\sum Y_i = y|\theta)$.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+The joint distribution (likelihood) of $Pr(Y_1 = y_1, . . . , Y_{100} = y_{100}|\theta)$ is:
+\begin{align}
+ &Pr(Y_1 = y_1, . . . , Y_{100} = y_{100}|\theta) = \prod p^{y_i} \cdot (1-p)^{(1-y_i)}\\
+ &=  p^{\sum_{i=1}^{100} y_i} \cdot (1-p)^{(100-\sum_{i=1}^{100} y_i)}
 
-```{r cars}
-summary(cars)
+\end{align}
+
+
+as for $P(\sum Y_i = y|\theta)$, let $Z = \sum Y_i $. Then:
+\begin{align}
+
+&P(\sum Y_i = y|\theta) = P(Z = z|\theta)\\
+&= \binom{100}{z} p^{z}(1-p)^{100-z}
+
+\end{align}
+
+
+
+b. For the moment, suppose you believed that $\theta \in {0.0, 0.1,\ldots , 0.9, 1.0}$.
+Given that the results of the survey were $\sum_{i=1}^{100} = 57$ compute $P(\sum Yi = 57|\theta)$ for each of these 11 values of $\theta$ and plot these probabilities as a function of $\theta$.
+
+```{r}
+
+theta = seq(from = 0, to = 1, length.out = 11)
+probs = dbinom(x = 57, size = 100,prob = theta)
+
+data.frame(theta,"probs" = round(probs,4))
+
+plot(theta,probs, type = "b")
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+c. Now suppose you originally had no prior information to believe one of
+these $\theta$-values over another, and so $Pr(\theta = 0.0) = Pr(\theta = 0.1) = · · · =Pr(\theta = 0.9) = Pr(\theta = 1.0)$.
+Use Bayes’ rule to compute $p(\theta|\sum_i=1 Yi =57)$ for each $\theta$-value. Make a plot of this posterior distribution as a
+function of $\theta$.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Using a discrete uniform prior $p(\theta) = \frac{1}{11}$, and using $Y = \sum_{i=1}^{100} Y_i$:
+
+\begin{align}
+
+P(\theta \| Y = 57) \\
+&= \frac{ P(Y = 57 \| \theta)P(\theta)}{\sum_{j=1}^{11} P(Y = 57\|\theta_j)P(\theta_j) }\\
+&=\frac{\binom{100}{57} \theta^57(1-\theta)^43 \cdot \frac{1}{11} }{ \sum_{j=1}^{11} \binom{100}{57}(\frac{1}{11})^57(\frac{10}{11})^43 \cdot (\frac{1}{11})\\
+
+\end{align}
+
+```{r}
+
+# post.probs = dbeta(theta,57+1,100-57+1)/sum(dbeta(theta,57+1,100-57+1))
+# 
+# post.probs
+# 
+# data.frame(theta,"Posterior Probs" = round(post.probs,4))
+# 
+# plot(theta,post.probs,type = 'b')
+
+my_post<-function(theta){ 1/11*(theta/11)^57 * ((1-theta)*10/11)^43}
+
+plot(seq(0,1,length.out = 100),my_post(seq(0,1,length.out = 100)),type = 'l')
+
+
+# plot(seq(0,1,length.out = 100),pbeta(seq(0,1,length.out = 100),58,44),type = 'l')
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+d. Now suppose you allow θ to be any value in the interval [0, 1]. Using
+the uniform prior density for θ, so that p(θ) = 1, plot the posterior
+density p(θ) × Pr(Pn
+i=1 Yi = 57|θ) as a function of θ.
+
+
+
+
+
+
+
+e. As discussed in this chapter, the posterior distribution of θ is beta(1+
+57, 1 + 100−57). Plot the posterior density as a function of θ. Discuss
+the relationships among all of the plots you have made for this exercise.
+
+Assuming a flat prior ($\theta \sim Beta(1,1)$) where $f(\theta) = 1 $ the posterior becomes $\theta|\mathcal{D} \sim Beta(y+1,100-y+1)$. So, 
+
+```{r}
+
+thetas.e = seq(0,1,length.out = 900)
+
+post.probs.e = dbeta(thetas.e,57+1,100-57+1)
+
+plot(thetas.e,post.probs.e,type = 'l')
+
+```
+
