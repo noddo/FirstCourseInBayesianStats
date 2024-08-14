@@ -7,6 +7,9 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+
 ```
 
 ## 3.1 
@@ -108,13 +111,30 @@ plot(thetas.e,post.probs.e,type = 'l')
 
 ```
 
-#3.2 
+# 3.2 
 Sensitivity analysis: It is sometimes useful to express the parameters $a$ and $b$ in a beta distribution in terms of $\theta_0 = \frac{a}{a+b}$ and $n_0 = a+b$, so that $a = \theta_0n_0$ and $b = (1 − \theta_0)n_0$. Reconsidering the sample survey data in Exercise 3.1, for each combination of $\theta_0 \in \{0.1, 0.2, \ldots, 0.9\}$ and $n_0 \in \{1, 2, 8, 16, 32\}$ find the corresponding $a$, $b$ values and compute $P(\theta >0.5| \sum_{i=1}^{100} Y_i = 57)$ using a beta(a, b) prior distribution for $\theta$. Display the results with a contour plot, and discuss how the plot could be used to explain to someone whether or not they should believe that $\theta > 0.5$, based on the data that $\sum_{i=1}^{100} Y_i = 57$.
 
 
 ```{r}
 
+theta0s = seq(from = .1, to = .9, by = .1)
+n0s = c(1,2,8,16,32)
 
+params.3.2 = data.frame(expand.grid(theta0s,n0s),"probs1" = 0); colnames(params.3.2) = c("theta_0", "n_0","P(theta>.5|Y=57)")
+
+for (i in 1:nrow(params.3.2)){
+  
+  theta0 = params.3.2[i,"theta_0"]
+  n0 = params.3.2[i,"n_0"]
+  
+  post.samples = rbeta(1000,57+(theta0*n0)-1,43+(1-theta0)*n0-1)
+  
+  params.3.2[i,"P(theta>.5|Y=57)"]<- mean(post.samples > .5)
+
+}
+
+ggplot( data = params.3.2, aes(x = `theta_0`, y = `n_0`, z = `P(theta>.5|Y=57)` )) +
+  geom_contour_filled()
 
 ```
 
