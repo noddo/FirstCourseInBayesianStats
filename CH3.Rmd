@@ -181,7 +181,47 @@ yB = c(11, 11, 10, 9, 9, 8, 7, 10, 6, 8, 8, 9, 7)
 
 a) Find the posterior distributions, means, variances and 95% quantilebased confidence intervals for $θ_A$ and $θ_B$, assuming a Poisson sampling
 distribution for each group and the following prior distribution:
-$θ_A ∼ gamma(120,10)$, $θ_B \sim gamma(12,1)$, $p(θ_A, θ_B) = p(θ_A)×p(θ_B)$.
+$θ_A \sim \text{gamma}(120,10)$, $θ_B \sim \text{gamma}(12,1)$, $p(θ_A, θ_B) = p(θ_A) × p(θ_B)$.
+
+Assuming independence between A group and B group, $\theta_A|\mathcal{D}$ and $\theta_B|\mathcal{D}$ can be computed separately. Since $\mathcal{D}|\theta \sim Pois(\theta)$ then then using $\theta \sim \text{gamma}(a,b)$ gives a conjugacy; $\theta_A|\mathcal{D} \sim \text{gamma}(n\bar{x}+a,n+b)$
+
+```{r}
+
+num.samples = 1000
+
+post.theta<-function(x,a,b,num.samples = 1000, xbar = NULL, n=NULL){
+  if(is.null(xbar)){
+  xbar = mean(x)
+  }
+  if(is.null(n)){
+  n = length(x)
+  }
+  
+  s <- rgamma(num.samples, shape = n*xbar+a, rate = n+b)
+  
+  return(s)
+  
+}
+
+post.theta.A.samples <- post.theta(yA,120,10)
+post.theta.B.samples <- post.theta(yB,12,1)
+
+df = data.frame( "sample" = cbind(c(post.theta.A.samples,post.theta.B.samples)),
+                 "group" = as.factor(rep( c("A","B"), times = c(num.samples,num.samples) ))
+)
+
+#display data frame with means, variances and conf intervals for theta
+data.frame( "group" = c("theta A","theta B"),
+            "mean" = round(as.numeric(lapply(list(post.theta.A.samples ,post.theta.B.samples), FUN = mean )),3), 
+            "variance" = round(as.numeric( lapply(list(post.theta.A.samples ,post.theta.B.samples), FUN = var )),3),
+            "conf.int" = as.character( lapply(list(post.theta.A.samples ,post.theta.B.samples), FUN = function(x){round(unname(quantile(x, c(.025,.975))),3)} ))
+            )
+
+#display densities of each group's theta
+ggplot(df, aes(x = sample, group =  group,fill = group))+ geom_density(alpha = .7)
+
+```
+
 
 b) Compute and plot the posterior expectation of $θ_B$ under the prior distribution $θB ∼ gamma(12×n_0, n_0)$ for each value of $n_0 ∈ {1, 2, . . . , 50}$.
 Describe what sort of prior beliefs about $θ_B$ would be necessary in order for the posterior expectation of $θ_B$ to be close to that of $θ_A$.
