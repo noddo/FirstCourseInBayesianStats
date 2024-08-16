@@ -226,6 +226,33 @@ ggplot(df, aes(x = sample, group =  group,fill = group))+ geom_density(alpha = .
 b) Compute and plot the posterior expectation of $θ_B$ under the prior distribution $θB ∼ gamma(12×n_0, n_0)$ for each value of $n_0 ∈ {1, 2, . . . , 50}$.
 Describe what sort of prior beliefs about $θ_B$ would be necessary in order for the posterior expectation of $θ_B$ to be close to that of $θ_A$.
 
+```{r}
+
+xbarB = mean(yB)
+nB = length(yB)
+
+x<-seq(from=0, to=15, by = .01)
+n0<- seq(from = 1, to = 50, by = 3)
+
+# plot(x,dgamma(x,12,1),type = "n")
+
+plot(density(post.theta.A.samples), ylim = c(0,1),xlim = c(7,14),main = "", xlab = "")
+
+for (i in 1:length(n0)){
+  a = 12*n0[i]
+  b = n0[i]
+  
+  y = dgamma(x, shape = nB*xbarB+a, rate = nB+b)
+  
+  lines(x, y, type = "l", col =i, lwd = i*.1, main = "",xlab = "")
+}
+
+# lines(density(post.theta.A.samples), ylim = c(0,1), xlim = c(7,14), lty = 9, xlab = "", main = "thetaB|data ~ gamma(n*xbar+a,n+b) ")
+
+
+```
+
+
 c) Should knowledge about population A tell us anything about population B? Discuss whether or not it makes sense to have $p(θ_A, θ_B) = p(θ_A) × p(θ_B)$.
 
 
