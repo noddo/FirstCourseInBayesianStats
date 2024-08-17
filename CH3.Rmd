@@ -234,15 +234,16 @@ nB = length(yB)
 x<-seq(from=0, to=15, by = .01)
 n0<- seq(from = 1, to = 50, by = 3)
 
-# plot(x,dgamma(x,12,1),type = "n")
-
-plot(density(post.theta.A.samples), ylim = c(0,1),xlim = c(7,14),main = "", xlab = "")
-
+#plot density curves as they relate to the posterior of thetaA
+plot(density(post.theta.A.samples), ylim = c(0,1),xlim = c(7,14),main = "", xlab = "", col = "red", lwd = 2)
+expectedvalues = c()
 for (i in 1:length(n0)){
   a = 12*n0[i]
   b = n0[i]
   
   y = dgamma(x, shape = nB*xbarB+a, rate = nB+b)
+  
+  expectedvalues = c(expectedvalues, (nB*xbarB+a)/(nB+b))
   
   lines(x, y, type = "l", col =i, lwd = i*.1, main = "",xlab = "")
 }
@@ -250,9 +251,18 @@ for (i in 1:length(n0)){
 # lines(density(post.theta.A.samples), ylim = c(0,1), xlim = c(7,14), lty = 9, xlab = "", main = "thetaB|data ~ gamma(n*xbar+a,n+b) ")
 
 
+plot(n0,expectedvalues, type = 'b',ylim = c(8,12.5), ylab = "E[thetaB](n0)")
+abline(h = 12,col = "blue")
+
 ```
+The posteriors with varying values of $n_0$ suggests that there would have to be a very strong belief that there is not a difference between $\theta_B$ and $\theta_A$. This would entail a much, much higher value for $n_0$ than those proposed (>50). In fact, for the posterior expectation to come within .5 of $E[\theta_A]$, $n_0$ would have to be 73.
+
+  b1) Consider the following distribution:
+  $$ T_{n_0} = \left| \frac{\theta_A(n_0)|\mathbf{y}_A}{\theta_B | \mathbf{y}_B } - 1 \right| $$  
+  What is the lowest value for $n_0$ such that $P(T<\epsilon) < .5$, for $\epsilon \in \{.5, .2, .1, .01 \}$?
 
 
 c) Should knowledge about population A tell us anything about population B? Discuss whether or not it makes sense to have $p(θ_A, θ_B) = p(θ_A) × p(θ_B)$.
 
+The problem setup suggests that independence is a strong assumption, given that "*type B mice are related to type A mice*". It would make sense to formulate a model without the assumption of independence. 
 
