@@ -257,8 +257,40 @@ abline(h = 12,col = "blue")
 The posteriors with varying values of $n_0$ suggests that there would have to be a very strong belief that there is not a difference between $\theta_B$ and $\theta_A$. This would entail a much, much higher value for $n_0$ than those proposed (>50). In fact, for the posterior expectation to come within .5 of $E[\theta_A]$, $n_0$ would have to be 73.
 
   b1) Consider the following distribution:
-  $$ T_{n_0} = \left| \frac{\theta_A(n_0)|\mathbf{y}_A}{\theta_B | \mathbf{y}_B } - 1 \right| $$  
+  $$ T_{n_0} = \left| \frac{\theta_B(n_0)|\mathbf{y}_B}{\theta_A | \mathbf{y}_A } - 1 \right| $$  
   What is the lowest value for $n_0$ such that $P(T<\epsilon) < .5$, for $\epsilon \in \{.5, .2, .1, .01 \}$?
+```{r}
+num.samples = 10000
+
+epsilons <-c(.5, .2, .1, .01)
+
+T.stat <- function (n0) {abs( post.theta(yB,12*n0,n0, num.samples = num.samples)/post.theta(yA,120,10, num.samples = num.samples) - 1 )}
+
+
+T = 1
+n0s = c()
+ps = c()
+
+n0 = 13
+while(mean(T<.01) < .5){
+if( length(n0s) > 1000){break}
+T = T.stat(n0)
+ps = c(ps, mean(T<.1))
+n0s = c(n0s,n0)
+# print(n0)
+n0 = n0 + 1 
+}
+
+plot(n0s,ps,type = "l", ylim = c(.3,1.1))
+abline(h = 1)
+
+max(n0s)
+# plot(density(T))
+
+quantile(T,c(.025,.25,.5,.75,.975))
+
+```
+
 
 
 c) Should knowledge about population A tell us anything about population B? Discuss whether or not it makes sense to have $p(θ_A, θ_B) = p(θ_A) × p(θ_B)$.
@@ -276,8 +308,73 @@ a) Using a $\text{beta}(2,8)$ prior for $θ$, plot $p(θ), p(y|θ)$ and $p(θ|y)
 of $θ$. Find the posterior mean, mode, and standard deviation of $θ$.
 Find a 95% quantile-based confidence interval.
 
-b) Repeat a), but using a $\text{beta}(8,2)$ prior for $θ$.
+```{r}
+n = 43
+y = 15
 
+thetas = seq(0,1,by=.01)
+
+df = data.frame( 
+  "theta" = thetas
+  , "dist" = rep(c("prior","sampling","post"),c(101,101,101))
+  , "prob" = cbind(c(
+                    dbeta(thetas,2,8), #prior
+                    dbinom(15,43,thetas), #sampling
+                    dbeta(thetas,2+15,8+28) #posterior
+                    )
+                   )
+                 )
+#show plot of distributions.
+ggplot(df,aes(x=theta,y=prob,col = dist))+geom_line()
+
+# sample from posterior distribution
+post.samples = rbeta(1000,2+15,8+28)
+
+cat(
+  "theta | y",
+  paste("mean= ", round(mean(post.samples),3)),
+  paste("mode= ", round(unique(post.samples)[which.max(unique(post.samples))],3)),
+  paste("std.dev= ",round(sd(post.samples),3)),
+  paste("quantile=", "[",round(quantile(post.samples,.025),3),",",round(quantile(post.samples,.975),3),"]")
+  
+,sep = "\n")
+
+```
+
+
+b) Repeat a), but using a $\text{beta}(8,2)$ prior for $θ$.
+```{r}
+n = 43
+y = 15
+
+thetas = seq(0,1,by=.01)
+
+df = data.frame( 
+  "theta" = thetas
+  , "dist" = rep(c("prior","sampling","post"),c(101,101,101))
+  , "prob" = cbind(c(
+                    dbeta(thetas,8,2), #prior
+                    dbinom(15,43,thetas), #sampling
+                    dbeta(thetas,8+15,2+28) #posterior
+                    )
+                   )
+                 )
+#show plot of distributions.
+ggplot(df,aes(x=theta,y=prob,col = dist))+geom_line()
+
+# sample from posterior distribution
+post.samples = rbeta(1000,8+15,2+28)
+
+cat(
+  "theta | y",
+  paste("mean= ", round(mean(post.samples),3)),
+  paste("mode= ", round(unique(post.samples)[which.max(unique(post.samples))],3)),
+  paste("std.dev= ",round(sd(post.samples),3)),
+  paste("quantile=", "[",round(quantile(post.samples,.025),3),",",round(quantile(post.samples,.975),3),"]")
+  
+,sep = "\n")
+
+```
 c) Consider the following prior distribution for θ:
 
 \begin{align}
