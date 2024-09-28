@@ -291,8 +291,6 @@ quantile(T,c(.025,.25,.5,.75,.975))
 
 ```
 
-
-
 c) Should knowledge about population A tell us anything about population B? Discuss whether or not it makes sense to have $p(θ_A, θ_B) = p(θ_A) × p(θ_B)$.
 
 The problem setup suggests that independence is a strong assumption, given that "*type B mice are related to type A mice*". It would make sense to formulate a model without the assumption of independence. 
@@ -394,6 +392,13 @@ d) For the prior in c):
   iii. On a computer, calculate and plot $p(θ) × p(y|θ)$ for a variety of $θ$ values. Also find (approximately) the posterior mode, and discuss its relation to the modes in a) and b).
 
 e) Find a general formula for the weights of the mixture distribution in d) ii, and provide an interpretation for their values.
+
+
+# 3.5
+3.5 Mixtures of conjugate priors: Let p(y|φ) = c(φ)h(y)exp{φt(y)} be an exponential family model and let p1(φ), . . . pK (φ) be K different members of the conjugate class of prior densities given in Section 3.3. A mixture of conjugate priors is given by p ̃(θ) = PKk=1 wkpk(θ), where the wk’s are all greater than zero and P wk = 1 (see also Diaconis and Ylvisaker (1985)).
+a) Identify the general form of the posterior distribution of θ, based on n i.i.d. samples from p(y|θ) and the prior distribution given by p ̃.
+b) Repeat a) but in the special case that p(y|θ) = dpois(y,θ) and
+p1,...,pK aregammadensities.
 
 
 
