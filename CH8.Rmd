@@ -9,3 +9,127 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Problem 8.2
+
+Sensitivity analysis: In this exercise we will revisit the study from Exercise 5.2, in which 32 students in a science classroom were randomly assigned to one of two study methods, A and B, with $n_A = n_B = 16$. After several weeks of study, students were examined on the course material, and the scores are summarized by $\{\bar{y}_A = 75.2, s_A = 7.3\} \{\bar{y}_B = 77.5, s_b = 8.1\}$. We will estimate $\theta_A = \mu + \delta$ and $\theta_B = \mu − \delta$ using the two-sample model and prior distributions of Section 8.1.
+
+a) Let $\mu \sim$ normal(75, 100), $1/\sigma^2 \sim$ gamma(1, 100) and $\delta \sim $ normal($\delta_0, \tau_0^2$). For each combination of $\delta_0 \in \{−4,−2,0,2,4\}$ and $\tau_0 \in \{10,50,100,500\}$, obtain the posterior distribution of $\mu, \delta$ and $\sigma^2$ and compute
+
+i. Pr($\delta < 0|Y$); 
+
+ii. a 95% posterior confidence interval for $\delta$;
+
+iii. the prior and posterior correlation of $θ_A$ and $θ_B$.
+
+```{r}
+
+#data statistics:
+n1 = n2 = 16
+ybarA = 75.2; sA = 7.3
+ybarB = 77.5; sB = 8.1
+
+#prior specifications:
+#mu ~ normal (mu0, gamma02)
+mu0 = 75; gamma02 = 100
+
+#delta ~ normal(delta0,tau02)
+delta0s = c(-4,-2,0,2,4); tau02s = c(10,50,100,500)
+
+# 1/sigma2 ~ gamma(nu0*.5, nu0*sigma02*0.5)
+nu0 = 2; sigma02 = 100
+
+#posterior distributions
+
+#mu|Data, delta, sigma2 ~ normal(mun,gamman2)
+mu_post = function(delta,sigma2){
+  gamman2 = (1/gamma02 + (n1 + n2)/sigma2)^-1
+  mun = gamman2 * (mu0/gamma02 + n1/sigma2*(ybarA - delta) + n2/sigma2*(ybarB + delta))
+  return(rnorm(1,mun,sqrt(gamman2)))
+}
+
+# 1/sigma|Data,mu,delta ~ gamma(nun, nunsigman2)
+sigma_post = function(mu,delta){
+  nun = nu0 + n1 + n2
+  # nunsigman2 = nu0*sigma02 + sum((yA-mu-delta)^2) + sum((yB-mu+delta)^2)
+  # Since sum(x-theta)^2 = sum(x-xbar)^2+n(xbar-theta)^2
+  nunsigman2 = nu0*sigma02 + (n1-1) * sA + n1*(ybarA-(mu+delta))^2 + (n2-1)*sB+n1*(ybarB-(mu-delta))^2
+  return(1/rgamma(1,nun/2,nunsigman2/2))
+}
+
+#delta|Data, mu, sigma2 ~ normal(deltan,taun2)
+delta_post = function(mu,sigma2){
+  taun2=(1/tau02 + (n1+n2)/sigma2)^-1
+  deltan = taun2 * (delta0/tau02 + n1/sigma2*(ybarA-mu) - n2/sigma2*(ybarB-mu))
+  return(rnorm(1,deltan,sqrt(taun2)))
+}
+
+#create data frame to house different values of delta0 and tau02
+#other columns created to store info for parts i, ii and iii
+df = data.frame(expand.grid(delta0s,tau02s)); names(df) = c("delta0","tau02")
+df["E[delta]"] = 0
+df["STD(delta)"]=0
+df["delta .95 ci"]="NULL"
+df["P(delta<0|Y)"]=0
+df["corr(thetaA,thetaB)"] = "NULL"      
+      
+for (p in 1:nrow(df)){
+  #initial values for delta, mu and sigma (sample estimates)
+  delta = (ybarA-ybarB)/2
+  mu = (ybarA+ybarB)/2
+  sigma = sqrt( ((n1-1)*sA^2+(ybarA-(delta+mu))^2 + (n2-1)*sB^2+(ybarB-(delta-mu))^2)/(n1+n2) )
+  
+  #gibbs sampler
+  DELTA <-delta; MU <- mu; SIGMA <- sigma
+
+  delta0 = df[p,"delta0"]
+  tau02 = df[p,"tau02"]
+  
+    for (i in 1:5000){
+      #sample sigma
+      sigma <- sigma_post(mu, delta)
+      #sample mu
+      mu <- mu_post(delta,sqrt(sigma))
+      #sample delta
+      delta <- delta_post(mu,sqrt(sigma))
+      #store samples
+      DELTA <-c(DELTA,delta); MU <-c(MU,mu); SIGMA <-c(SIGMA,sigma)
+    }
+
+df[p,"P(delta<0|Y)"] <- mean(ifelse(DELTA<0,1,0))
+df[p,"delta .95 ci"] <-   paste( "["
+        , round(quantile(DELTA, .025),3),","
+        , round(quantile(DELTA, .975),3),"]"
+        )
+
+thetaA = (MU+DELTA)/2; thetaB = (MU-DELTA)/2
+df["E[delta]"] = mean(DELTA)
+df["STD(delta)"]= sqrt(var(DELTA))
+df[p,"corr(thetaA,thetaB)"]<-cor(thetaA,thetaB)
+
+}
+
+df
+
+
+```
+
+b) Describe how you might use these results to convey evidence that
+$\theta_A < \theta_B$ to people of a variety of prior opinions.
+
+
+# Problem 8.3
+
+Hierarchical modeling: The files school1.dat through school8.dat give weekly hours spent on homework for students sampled from eight different schools. Obtain posterior distributions for the true means for the eight different schools using a hierarchical normal model with the following prior parameters:
+$$
+μ_0 =7, γ_0^2 =5, τ_0^2 =10 ,η_0 = 2, σ_0^2 =15, ν_0 =2.
+$$
+a) Run a Gibbs sampling algorithm to approximate the posterior distribution of $\{θ,σ^2,μ,τ^2\}$. Assess the convergence of the Markov chain, and find the effective sample size for ${σ^2,μ,τ^2}$. Run the chain long enough so that the effective sample sizes are all above 1,000.
+
+b) Compute posterior means and 95% confidence regions for $\{σ^2,μ,τ^2\}$. Also, compare the posterior densities to the prior densities, and discuss what was learned from the data.
+
+c) Plot the posterior density of $\frac{\tau^2}{\sigma^2+\tau^2}$ and compare it to a plot of the prior density of R. Describe the evidence for between-school variation.
+
+d) Obtain the posterior probability that $θ_7$ is smaller than $θ_6$, as well as the posterior probability that $θ_7$ is the smallest of all the $θ$’s.
+
+e) Plot the sample averages $\bar{y}_1, \ldots,\bar{y}_8$ against the posterior expectations of $θ_1, \ldots , θ_8$, and describe the relationship. Also compute the sample mean of all observations and compare it to the posterior mean of $μ$.

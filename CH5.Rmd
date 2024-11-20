@@ -273,19 +273,3 @@ plot(
 ```
 The prior parameters $(\kappa_0, \nu_0 )$ indicate prior sample size and variance respectively. The higher $\kappa_0$, the more weight will be given to the prior information into the posterior distribution of $\sigma$ (or $\tau=\frac{1}{\sigma}$). The higher $\nu_0$ is the more variation is present in the prior (in other words, the flatter the prior will be). In the case where $\nu_0 = \kappa_0 = i$, the higher $i$, not only will the posterior be more dependent on the prior, but also, the posterior will reflect more variation (also get flatter). The takaway here, however is that regardless of prior selected, it's highly likely that $\theta_A < \theta_B$ since $P(\theta_A < \theta_B) > .5$ for all selected values of $(\kappa_0, \nu_0 )$.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
